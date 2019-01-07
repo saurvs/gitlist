@@ -19,6 +19,7 @@
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/jquery.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/raphael.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/bootstrap.js"></script>
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/bootstrap-treeview.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/codemirror.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/showdown.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/table.js"></script>
@@ -26,6 +27,31 @@
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/networkGraph.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/gitgraph.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/draw.js"></script>
+        
+        {% if repo is defined %}
+            <script>
+                const tree = getFullTree();
+                const raw_blob_path =
+                    ['{{ app.request.basepath }}', '{{ repo }}', 'raw', '{{ branch }}'].join('/')
+                console.log(raw_blob_path)
+                $('#tree')
+                    .treeview({ data: tree })
+                    .treeview('collapseAll')
+                    .on('nodeSelected', function(event, node) {
+                        if(!node.hasOwnProperty('nodes')) {
+                            //console.log(data)
+                            $.get(raw_blob_path + node['path'], function(raw_blob) {
+                                //console.log(raw_blob)
+                                cm_viewer.setValue(raw_blob)
+                                cm_viewer.setOption('mode', node['type'])
+                            })
+                        }
+                        $('#tree')
+                            .treeview('unselectNode', [node['nodeId'], { silent: true }]);
+                    })
+            </script>
+        {% endif %}
+        
         {% endblock %}
     </body>
 </html>

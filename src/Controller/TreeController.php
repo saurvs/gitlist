@@ -2,6 +2,9 @@
 
 namespace GitList\Controller;
 
+use Gitter\Model\Blob;
+use Gitter\Model\Tree;
+use Gitter\Model\Symlink;
 use Silex\ControllerProviderInterface;
 use Silex\Application;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -9,10 +12,55 @@ use Symfony\Component\HttpFoundation\Request;
 
 class TreeController implements ControllerProviderInterface
 {
+    public function fullTreeOutput($app, $tree, $parentPath = '') {
+        $files = $folders = array();
+
+        foreach ($tree as $node) {
+            if ($node instanceof Blob) {
+                //$file['type'] = 'blob';
+                $file['text'] = $node->getName();
+                $file['path'] = $parentPath . '/' . $file['text'];
+                $file['type'] = $app['util.repository']->getFileType($file['text']);
+                //$file['size'] = $node->getSize();
+                //$file['mode'] = $node->getMode();
+                //$file['hash'] = $node->getHash();
+                $files[] = $file;
+                continue;
+            }
+            if ($node instanceof Tree) {
+                //$folder['type'] = 'folder';
+                $folder['text'] = $node->getName();
+                $folder['path'] = $parentPath . '/' . $folder['text'];
+                $folder['selectable'] = false;
+                //$folder['size'] = '';
+                //$folder['mode'] = $node->getMode();
+                //$folder['hash'] = $node->getHash();
+
+                $node->parse();
+                $folder['nodes'] = $this->fullTreeOutput($app, $node, $folder['path']);
+
+                $folders[] = $folder;
+                continue;
+            }
+            /*
+            if ($node instanceof Symlink) {
+                //$folder['type'] = 'symlink';
+                $folder['text'] = $node->getName();
+                //$folder['size'] = '';
+                //$folder['mode'] = $node->getMode();
+                //$folder['hash'] = '';
+                //$folder['path'] = $node->getPath();
+                $folders[] = $folder;
+            }*/
+        }
+        // Little hack to make folders appear before files
+        $files = array_merge($folders, $files);
+        return $files;
+    }
+
     public function connect(Application $app)
     {
         $route = $app['controllers_factory'];
-
         $route->get('{repo}/tree/{commitishPath}/', $treeController = function ($repo, $commitishPath = '') use ($app) {
             $repository = $app['git']->getRepositoryFromName($app['git.repos'], $repo);
             if (!$commitishPath) {
@@ -25,6 +73,8 @@ class TreeController implements ControllerProviderInterface
             $files = $repository->getTree($tree ? "$branch:\"$tree\"/" : $branch);
             $breadcrumbs = $app['util.view']->getBreadcrumbs($tree);
 
+            $fullTreeJSON = json_encode($this->fullTreeOutput($app, $files));
+
             $parent = null;
             if (($slash = strrpos($tree, '/')) !== false) {
                 $parent = substr($tree, 0, $slash);
@@ -34,6 +84,7 @@ class TreeController implements ControllerProviderInterface
 
             return $app['twig']->render('tree.twig', array(
                 'files' => $files->output(),
+                'fullTreeJSON' => $fullTreeJSON,
                 'repo' => $repo,
                 'branch' => $branch,
                 'path' => $tree ? $tree . '/' : $tree,

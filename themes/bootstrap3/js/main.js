@@ -1,12 +1,13 @@
+var cm_viewer;
 $(function () {
     $('.dropdown-toggle').dropdown();
 
-    if ($('#sourcecode').length) {
         var value = $('#sourcecode').text();
         var mode = $('#sourcecode').attr('language');
         var pre = $('#sourcecode').get(0);
-        var viewer = CodeMirror(function(elt) {
+        cm_viewer = CodeMirror(function(elt) {
             pre.parentNode.replaceChild(elt, pre);
+            elt.setAttribute('id','sourcecode')
         }, {
             value: value,
             lineNumbers: true,
@@ -18,7 +19,6 @@ $(function () {
                 return '<a name="L'+ ln +'"></a><a href="#L'+ ln +'">'+ ln +'</a>';
             }
         });
-    }
 
     if ($('#md-content').length) {
         var converter = new Showdown.converter({extensions: ['table']});

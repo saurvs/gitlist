@@ -45,6 +45,32 @@
 
     {% if files is not empty %}
     <div class="table-border">
+        <table class="table tree">
+            <tbody>
+                <tr>
+                    <td width="20%">
+                        <div id="tree" width></div>
+                    </td>
+                    <td width="70%">
+                        <div id="source-view">
+                            <pre id="sourcecode"></pre>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function getFullTree() {
+            const json = "{{ fullTreeJSON }}".replace(/\&quot;/g,'"')
+            //console.log(json)
+            return JSON.parse(json)
+        }
+    </script>
+    
+    <!--
+    <div class="table-border">
     <table class="table tree">
         <thead>
             <tr>
@@ -83,6 +109,7 @@
         </tbody>
     </table>
     </div>
+    -->
     {% else %}
         <p>This repository is empty.</p>
     {% endif %}
