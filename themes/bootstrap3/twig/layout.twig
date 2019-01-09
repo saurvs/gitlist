@@ -24,7 +24,6 @@
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/showdown.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/table.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/main.js"></script>
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/networkGraph.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/gitgraph.js"></script>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/draw.js"></script>
         
@@ -46,6 +45,7 @@
                                 cm_viewer.setOption('mode', node['type'])
                             })
                         }
+                        $('html, body').animate({ scrollTop: 0 }, 'fast');
                         $('#tree')
                             .treeview('unselectNode', [node['nodeId'], { silent: true }]);
                     })
