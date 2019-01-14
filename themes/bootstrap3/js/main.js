@@ -1,5 +1,4 @@
 var cm_viewer;
-$(function () {
     $('.dropdown-toggle').dropdown();
 
         var value = $('#sourcecode').text();
@@ -82,4 +81,72 @@ $(function () {
         $pager.find('.previous').remove();
     }
     paginate();
-});
+
+    $.get(TREEJSON_PATH, function(tree) {
+        
+        function convert(tree) {
+            if (tree === undefined) return;
+            for (const i in tree) {
+                const arrayNode = tree[i]
+                const objectNode = {}
+
+                objectNode['text'] = arrayNode[0]
+
+                if (arrayNode[1] !== undefined) {
+                    convert(arrayNode[1])
+                    objectNode['nodes'] = arrayNode[1]
+
+                    objectNode['selectable'] = false
+                }
+
+                tree[i] = objectNode
+            }
+        }
+        convert(tree)
+
+        var readme_node, nondot_node
+
+        for (const node of tree) {
+            if (node['nodes'] === undefined) {
+                const filename = node['text']
+                if (filename.startsWith('readme') || filename.startsWith('README')) {
+                    readme_node = node
+                } else if (!filename.startsWith('.')) {
+                    nondot_node = node
+                }
+            }
+        }
+
+        if (readme_node) {
+            readme_node['state'] = {'selected': true}
+        } else if (nondot_node) {
+            nondot_node['state'] = {'selected': true}
+        }
+
+        function showFile(node) {
+            if (!node['path']) {
+                var path = '/' + node['text']
+                var parent = $('#tree').treeview('getParent', node['nodeId'])
+                while (parent.nodeId !== undefined) {
+                    path = '/' + parent['text'] + path
+                    parent = $('#tree').treeview('getParent', parent)
+                }
+                node['path'] = path
+            }
+            $.get(RAW_BLOB_BASEPATH + node['path'], function(raw_blob) {
+                cm_viewer.setValue(raw_blob)
+
+                var ftype = getFileType(node.text)
+                cm_viewer.setOption('mode', ftype)
+            })
+        }
+
+        $('#tree')
+            .treeview({ data: tree })
+            .treeview('collapseAll')
+            .on('nodeSelected', function(event, node) {
+                showFile(node)
+            })
+        var selected_node = $('#tree').treeview('getSelected')[0]
+        showFile(selected_node)
+    });

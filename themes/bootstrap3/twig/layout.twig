@@ -2,11 +2,13 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <title>{% block title %}Welcome!{% endblock %}</title>
+        <title>HackerRank Repository Viewer</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        
         <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/themes/{{ theme }}/css/style.css">
         <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/themes/{{ theme }}/css/fontawesome.css">
         <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/themes/{{ theme }}/css/gitgraph.css">
+        <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/themes/{{ theme }}/css/bootstrap-treeview.css">
         <link rel="shortcut icon" type="image/png" href="{{ app.request.basepath }}/themes/{{ theme }}/img/favicon.png" />
         <!--[if lt IE 9]>
         <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/html5.js"></script>
@@ -16,19 +18,14 @@
     <body>
         {% block body %}{% endblock %}
         {% block javascripts %}
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/jquery.js"></script>
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/raphael.js"></script>
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/bootstrap.js"></script>
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/bootstrap-treeview.js"></script>
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/codemirror.js"></script>
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/showdown.js"></script>
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/table.js"></script>
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/main.js"></script>
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/gitgraph.js"></script>
-        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/draw.js"></script>
-        
         {% if repo is defined %}
             <script>
+
+            const REPO_BASEPATH = ['{{ app.request.basepath }}', '{{ repo }}'].join('/')
+            const TREEJSON_PATH = [REPO_BASEPATH, 'treejson', '{{ branch }}'].join('/') + '/'
+            const RAW_BLOB_BASEPATH = [REPO_BASEPATH, 'raw', '{{ branch }}'].join('/')
+
+            /*
                 const tree = getFullTree();
                 const raw_blob_path =
                     ['{{ app.request.basepath }}', '{{ repo }}', 'raw', '{{ branch }}'].join('/')
@@ -46,11 +43,27 @@
                             })
                         }
                         $('html, body').animate({ scrollTop: 0 }, 'fast');
-                        $('#tree')
-                            .treeview('unselectNode', [node['nodeId'], { silent: true }]);
-                    })
+                        //$('#tree')
+                          //  .treeview('unselectNode', [node['nodeId'], { silent: true }]);
+                    })*/
             </script>
         {% endif %}
+
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/jquery.js"></script>
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/raphael.js"></script>
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/bootstrap.js"></script>
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/bootstrap-treeview.js"></script>
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/codemirror.js"></script>
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/showdown.js"></script>
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/table.js"></script>
+
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/util.js"></script>
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/main.js"></script>
+
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/gitgraph.js"></script>
+        <script type="application/javascript" src="{{ app.request.basepath }}/themes/{{ theme }}/js/draw.js"></script>
+        
+        
         
         {% endblock %}
     </body>

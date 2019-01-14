@@ -12,15 +12,16 @@ use Symfony\Component\HttpFoundation\Request;
 
 class TreeController implements ControllerProviderInterface
 {
-    public function fullTreeOutput($app, $tree, $parentPath = '') {
+    public function treeFromRootFiles($tree, $app, $parentPath = '') {
         $files = $folders = array();
 
         foreach ($tree as $node) {
             if ($node instanceof Blob) {
                 //$file['type'] = 'blob';
-                $file['text'] = $node->getName();
-                $file['path'] = $parentPath . '/' . $file['text'];
-                $file['type'] = $app['util.repository']->getFileType($file['text']);
+                $file = array();
+                $file[] = $node->getName();
+                //$file['path'] = $parentPath . '/' . $file['text'];
+                //$file['type'] = $app['util.repository']->getFileType($file['text']);
                 //$file['size'] = $node->getSize();
                 //$file['mode'] = $node->getMode();
                 //$file['hash'] = $node->getHash();
@@ -29,15 +30,16 @@ class TreeController implements ControllerProviderInterface
             }
             if ($node instanceof Tree) {
                 //$folder['type'] = 'folder';
-                $folder['text'] = $node->getName();
-                $folder['path'] = $parentPath . '/' . $folder['text'];
-                $folder['selectable'] = false;
+                $folder = array();
+                $folder[] = $node->getName();
+                //$folder['path'] = $parentPath . '/' . $folder['text'];
+                //$folder['selectable'] = false;
                 //$folder['size'] = '';
                 //$folder['mode'] = $node->getMode();
                 //$folder['hash'] = $node->getHash();
 
                 $node->parse();
-                $folder['nodes'] = $this->fullTreeOutput($app, $node, $folder['path']);
+                $folder[] = $this->treeFromRootFiles($node, $app);
 
                 $folders[] = $folder;
                 continue;
@@ -71,9 +73,6 @@ class TreeController implements ControllerProviderInterface
 
             list($branch, $tree) = $app['util.repository']->extractRef($repository, $branch, $tree);
             $files = $repository->getTree($tree ? "$branch:\"$tree\"/" : $branch);
-            $breadcrumbs = $app['util.view']->getBreadcrumbs($tree);
-
-            $fullTreeJSON = json_encode($this->fullTreeOutput($app, $files));
 
             $parent = null;
             if (($slash = strrpos($tree, '/')) !== false) {
@@ -83,13 +82,10 @@ class TreeController implements ControllerProviderInterface
             }
 
             return $app['twig']->render('tree.twig', array(
-                'files' => $files->output(),
-                'fullTreeJSON' => $fullTreeJSON,
                 'repo' => $repo,
                 'branch' => $branch,
                 'path' => $tree ? $tree . '/' : $tree,
                 'parent' => $parent,
-                'breadcrumbs' => $breadcrumbs,
                 'branches' => $repository->getBranches(),
                 'tags' => $repository->getTags(),
                 'readme' => $app['util.repository']->getReadme($repository, $branch, $tree ? "$tree" : ''),
@@ -161,6 +157,24 @@ class TreeController implements ControllerProviderInterface
           ->assert('branch', $app['util.routing']->getBranchRegex())
           ->convert('branch', 'escaper.argument:escape')
           ->bind('archive');
+        
+        $route->get('{repo}/{format}/{branch}/', function($repo, $format, $commitishPath = '') use($app) {
+            $repository = $app['git']->getRepositoryFromName($app['git.repos'], $repo);
+            if (!$commitishPath) {
+                $commitishPath = $repository->getHead();
+            }
+
+            list($branch, $path) = $app['util.routing']->parseCommitishPathParam($commitishPath, $repo);
+            list($branch, $path) = $app['util.repository']->extractRef($repository, $branch, $path);
+
+            $rootFiles = $repository->getTree($path ? "$branch:\"$path\"/" : $branch);
+            $tree = $this->treeFromRootFiles($rootFiles, $app);
+
+            return $app->json($tree);
+        })->assert('format', 'treejson')
+        ->assert('repo', $app['util.routing']->getRepositoryRegex())
+        ->assert('branch', $app['util.routing']->getBranchRegex())
+        ->convert('branch', 'escaper.argument:escape');
 
         $route->get('{repo}/{branch}/', function ($repo, $branch) use ($app, $treeController) {
             return $treeController($repo, $branch);

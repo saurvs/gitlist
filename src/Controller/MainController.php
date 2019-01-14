@@ -14,12 +14,9 @@ class MainController implements ControllerProviderInterface
         $route = $app['controllers_factory'];
 
         $route->get('/', function () use ($app) {
-            $repositories = $app['git']->getRepositories($app['git.repos']);
-
-            return $app['twig']->render('index.twig', array(
-                'repositories' => $repositories,
-            ));
-        })->bind('homepage');
+            return new Response('Page not found', 404 /* ignored */, array('X-Status-Code' => 404));
+        });
+        
 
         $route->get('/refresh', function (Request $request) use ($app) {
             // Go back to calling page
