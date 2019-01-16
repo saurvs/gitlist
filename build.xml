@@ -2,7 +2,6 @@
 <project name="gitlist" default="build">
     <property name="vendordir" value="${basedir}/vendor/bin" />
     <target name="build" depends="prepare,lint,phpunit" />
-    <target name="build-package" depends="prepare-package,package" />
 
     <target name="clean" description="Clean build artifacts">
         <delete dir="${basedir}/build"/>
@@ -15,21 +14,11 @@
         </exec>
     </target>
 
-    <target name="prepare" depends="clean,get-composer" description="Prepare for build">
-        <mkdir dir="${basedir}/build/logs"/>
-        <mkdir dir="${basedir}/build/pdepend"/>
-        <copy file="config.ini-example" tofile="config.ini"/>
-        <exec executable="${basedir}/composer.phar" failonerror="true">
-            <arg value="install" />
-        </exec>
-    </target>
 
-    <target name="prepare-package" description="Prepare for build">
+    <target name="prepare" description="Prepare for build">
         <delete dir="${basedir}/vendor"/>
         <exec executable="${basedir}/composer.phar" failonerror="true">
             <arg value="install" />
-            <arg value="--no-dev" />
-            <arg value="--optimize-autoloader" />
         </exec>
     </target>
 
@@ -50,16 +39,4 @@
         <exec executable="${vendordir}/phpunit" failonerror="false"/>
     </target>
 
-    <target name="package" description="Package the application for distribution">
-        <copy todir="${basedir}/build/gitlist/">
-            <fileset dir="${basedir}" excludes="cache/**, build/**, tests/**, pkg_builder/**, phpunit.xml.dist, cache.properties, .gitignore, .travis.yml, build.xml, composer.json, composer.lock, composer.phar, config.ini" />
-        </copy>
-
-        <tar destfile="${basedir}/build/gitlist-master.tar.gz"
-            basedir="${basedir}/build/"
-            compression="gzip"
-            longfile="gnu"
-            excludes="gitlist-master.tar.gz, **/phpunit.xml.dist, **/composer.lock, **/composer.json, **/.travis.yml, **/test/**, **/tests/**, **/logs/**, **/pdepend/**"
-        />
-    </target>
 </project>
